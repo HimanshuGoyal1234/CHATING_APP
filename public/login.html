@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Page</title>
+  <style>
+    :root {
+      --primary-color: #bb86fc;
+      --primary-hover: #9a67ea;
+      --background-dark: #121212;
+      --container-dark: #1e1e1e;
+      --text-light: #ffffff;
+      --text-gray: #9e9e9e;
+      --input-bg: #2d2d2d;
+      --error-color: #b784ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(216deg, rgba(77, 77, 77, 0.05) 0%, rgba(77, 77, 77, 0.05) 25%, rgba(42, 42, 42, 0.05) 25%, rgba(42, 42, 42, 0.05) 38%, rgba(223, 223, 223, 0.05)38%, rgba(223, 223, 223, 0.05) 75%, rgba(36, 36, 36, 0.05) 75%, rgba(36, 36, 36, 0.05)100%), linear-gradient(44deg, rgba(128, 128, 128, 0.05) 0%, rgba(128, 128, 128, 0.05) 34%, rgba(212, 212, 212, 0.05) 34%, rgba(212, 212, 212, 0.05) 57%, rgba(25, 25, 25, 0.05) 57%, rgba(25, 25, 25, 0.05) 89%, rgba(135, 135, 135, 0.05) 89%, rgba(135, 135, 135, 0.05) 100%), linear-gradient(241deg, rgba(55, 55, 55, 0.05) 0%, rgba(55, 55, 55, 0.05) 14%, rgba(209, 209, 209, 0.05) 14%, rgba(209, 209, 209, 0.05) 60%, rgba(245, 245, 245, 0.05) 60%, rgba(245, 245, 245, 0.05) 69%, rgba(164, 164, 164, 0.05) 69%, rgba(164, 164, 164, 0.05)100%), linear-gradient(249deg, rgba(248, 248, 248, 0.05) 0%, rgba(248, 248, 248, 0.05) 32%, rgba(148, 148, 148, 0.05) 32%, rgba(148, 148, 148, 0.05) 35%, rgba(202, 202, 202, 0.05) 35%, rgba(202, 202, 202, 0.05)51%, rgba(181, 181, 181, 0.05) 51%, rgba(181, 181, 181, 0.05) 100%), linear-gradient(92deg, hsl(214, 0%, 11%), hsl(214, 0%, 11%));
+      color: var(--text-light);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .login-container {
+      text-align: center;
+      background-color: var(--container-dark);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 400px;
+      transition: all 0.3s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    .shake {
+      animation: shake 0.5s;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      margin: 0 0 20px 0;
+      font-weight: 500;
+      font-size: clamp(24px, 5vw, 28px);
+    }
+
+    .input-group {
+      margin-bottom: 18px;
+      text-align: left;
+      position: relative;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-gray);
+      font-size: clamp(13px, 3vw, 14px);
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 35px 12px 12px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background-color: var(--input-bg);
+      color: var(--text-light);
+      font-size: clamp(14px, 3vw, 15px);
+      transition: all 0.3s;
+    }
+
+    input:focus {
+      outline: 2px solid var(--primary-color);
+      outline-offset: -1px;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 38px;
+      cursor: pointer;
+      color: var(--primary-color);
+      font-size: 13px;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: clamp(14px, 3vw, 15px);
+      width: 100%;
+      font-weight: 500;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      background-color: #6d4b9e;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .create-account-btn {
+      background-color: transparent;
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .create-account-btn:hover {
+      background-color: rgba(187, 134, 252, 0.1);
+    }
+
+    .error-message {
+      color: var(--error-color);
+      padding: 8px 0;
+      margin: -10px 0 8px 0;
+      font-size: clamp(13px, 3vw, 14px);
+      opacity: 0;
+      height: 20px;
+      transition: opacity 0.3s;
+    }
+
+    .visible {
+      opacity: 1;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 20px 15px;
+      }
+      
+      .input-group {
+        margin-bottom: 15px;
+      }
+      
+      input[type="text"],
+      input[type="password"] {
+        padding: 10px 30px 10px 10px;
+      }
+      
+      .toggle-password {
+        top: 34px;
+        right: 10px;
+      }
+      
+      .btn {
+        padding: 12px;
+      }
+    }
+
+    @media (max-width: 350px) {
+      h1 {
+        margin-bottom: 15px;
+      }
+      
+      .btn {
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container" id="login-container">
+    <h1>Login</h1>
+    <form action="/login" method="POST" id="loginForm">
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required />
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required />
+        <button type="button" class="toggle-password" onclick="togglePassword()">Show</button>
+      </div>
+      <div class="error-message" id="error-message"></div>
+      <button type="submit" class="btn" id="login-btn">Login</button>
+    </form>
+    <button class="btn create-account-btn" onclick="window.location.href='create_account.html'">Create Account</button>
+  </div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const errorMessage = document.getElementById("error-message");
+      const loginContainer = document.getElementById("login-container");
+      const loginBtn = document.getElementById("login-btn");
+
+      // Clear previous errors
+      errorMessage.textContent = "";
+      errorMessage.classList.remove("visible");
+      
+      // Show loading state
+
+      fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      })
+        .then(res => {
+          if (!res.ok) {
+            // If response is not 2xx, parse error
+            return res.json().then(err => {
+              throw new Error(err.message || "Login failed");
+            });
+          }
+          return res.json();
+        })
+        .then(data => {
+          if (data.redirect) {
+            localStorage.setItem("loggedInUser", username); // ✅ Save username
+            window.location.href = data.redirect;
+          } else {
+            throw new Error("Invalid username or password");
+          }
+        })
+        .catch(err => {
+          errorMessage.textContent = "Login Failed";
+          errorMessage.classList.add("visible");
+          loginContainer.classList.add("shake");
+          setTimeout(() => {
+            errorMessage.textContent = "Password Incorrect";
+            loginContainer.classList.remove("shake");
+            
+          }, 1000);
+        })
+        .finally(() => {
+          loginBtn.disabled = false;
+          loginBtn.textContent = "Login";
+        });
+    });
+
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const toggleBtn = document.querySelector('.toggle-password');
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleBtn.textContent = 'Hide';
+      } else {
+        passwordInput.type = 'password';
+        toggleBtn.textContent = 'Show';
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+      :root {
+        --primary-color: #5e00c9;
+        --primary-hover: #7700ff;
+        --secondary-color: #3700b3;
+        --background-dark: #121212;
+        --background-darker: #1e1e1e;
+        --background-light: #2d2d2d;
+        --text-primary: #ffffff;
+        --text-secondary: #e1e1e1;
+        --text-typing: #bb86fc;
+        --online-status: #03dac6;
+        --border-radius: 8px;
+        --spacing-sm: 8px;
+        --spacing-md: 12px;
+        --spacing-lg: 16px;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--background-dark);
+        color: var(--text-primary);
+        font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .chat-header {
+        background: var(--background-light);
+        padding: var(--spacing-md) var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .profile-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #555;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      .header-info {
+        flex: 1;
+      }
+
+      .header-name {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-weight: 500;
+        font-size: 1rem;
+        margin-bottom: 2px;
+      }
+
+      .online-status {
+        width: 8px;
+        height: 8px;
+        transform: translate(2px, 2px);
+        border-radius: 50%;
+        background-color: var(--online-status);
+        display: inline-block;
+      }
+
+      .header-status {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+      }
+
+      .typing-indicator {
+        color: var(--text-typing);
+        font-style: italic;
+        display: none;
+      }
+
+      .typing-indicator.active {
+        display: block;
+      }
+
+      .last-seen {
+        font-size: 0.75rem;
+      }
+
+      .chat-container {
+        flex: 1;
+        padding: var(--spacing-md);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        background: var(--background-darker);
+        background-image: url('https://web.whatsapp.com/img/bg-chat-tile-dark_a4be512e7195b6b733d9110b408f075d.png');
+        background-repeat: repeat;
+        background-blend-mode: overlay;
+      }
+
+      .message {
+        padding: var(--spacing-sm) var(--spacing-md);
+        margin: 0;
+        border-radius: var(--border-radius);
+        max-width: 75%;
+        word-wrap: break-word;
+        line-height: 1.4;
+        position: relative;
+        transition: var(--transition);
+        box-shadow: var(--shadow);
+        font-size: 0.95rem;
+      }
+
+      .sent {
+        background: var(--primary-color);
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+      }
+
+      .received {
+        background: var(--secondary-color);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+      }
+
+      .message-time {
+        display: block;
+        font-size: 0.7rem;
+        opacity: 0.8;
+        margin-top: 4px;
+        text-align: right;
+      }
+
+      .message-input-container {
+        display: flex;
+        padding: var(--spacing-md);
+        background: var(--background-light);
+        position: sticky;
+        bottom: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        gap: var(--spacing-md);
+      }
+
+      .message-input {
+        flex: 1;
+        padding: 10px var(--spacing-md);
+        border: none;
+        border-radius: 24px;
+        background: var(--background-dark);
+        color: var(--text-primary);
+        font-size: 1rem;
+        outline: none;
+        transition: var(--transition);
+      }
+
+      .message-input:focus {
+        box-shadow: 0 0 0 1px var(--primary-color);
+      }
+
+      .send-button {
+        padding: 0 var(--spacing-md);
+        background: var(--primary-color);
+        border: none;
+        color: white;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+      }
+
+      .send-button:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+      }
+
+      .send-button:active {
+        transform: translateY(0);
+      }
+
+      .loading-text {
+        text-align: center;
+        color: var(--text-secondary);
+        margin: auto;
+        font-style: italic;
+      }
+
+      /* Scrollbar styling */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--background-dark);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 3px;
+      }
+
+      /* Animation for new messages */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message {
+        animation: fadeIn 0.2s ease-out;
+      }
+
+      /* Typing dots animation */
+      .typing-dots {
+        display: inline-flex;
+        align-items: center;
+        height: 17px;
+      }
+
+      .typing-dots span {
+        width: 6px;
+        height: 6px;
+        margin: 0 2px;
+        background-color: var(--text-typing);
+        border-radius: 50%;
+        display: inline-block;
+        animation: typingAnimation 1.4s infinite ease-in-out;
+      }
+
+      .typing-dots span:nth-child(1) {
+        animation-delay: 0s;
+      }
+
+      .typing-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .typing-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes typingAnimation {
+
+        0%,
+        60%,
+        100% {
+          transform: translateY(0);
+        }
+
+        30% {
+          transform: translateY(-3px);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="chat-header">
+      <div class="profile-pic" id="receiverDp">DP</div>
+      <div class="header-info">
+        <div class="header-name">
+          <span id="receiverName"></span>
+        </div>
+        <div class="header-status">
+          <span class="online-status" id="onlineStatus"></span>
+          <span class="typing-indicator" id="typingIndicator">
+            <span class="typing-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+            typing...
+          </span>
+          <span class="last-seen" id="lastSeen"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-container" id="chatMessages">
+      <p class="loading-text">Loading chat...</p>
+    </div>
+
+    <div class="message-input-container">
+      <input type="text" id="messageBox" class="message-input" placeholder="Type a message..." disabled>
+      <button class="send-button" disabled id="sendButton">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const urlParams = new URLSearchParams(window.location.search);
+      const receiver = urlParams.get('user');
+      const sender = localStorage.getItem("loggedInUser");
+
+      const messageBox = document.getElementById("messageBox");
+      const sendButton = document.getElementById("sendButton");
+      const messagesContainer = document.getElementById("chatMessages");
+      const receiverName = document.getElementById("receiverName");
+      const receiverDp = document.getElementById("receiverDp");
+      const onlineStatus = document.getElementById("onlineStatus");
+      const typingIndicator = document.getElementById("typingIndicator");
+      const lastSeen = document.getElementById("lastSeen");
+
+      if (!receiver || !sender) {
+        alert("User info missing.");
+        window.location.href = "search.html";
+      }
+
+      // 🎨 Avatar color map
+      const getAvatarColor = (char) => {
+        const colors = {
+          'A': '#6bff6b', 'B': '#ffa07a', 'C': '#ffb6c1', 'D': '#ff6b6b',
+          'E': '#ffd700', 'F': '#7fffd4', 'G': '#ff8c00', 'H': '#6a5acd',
+          'I': '#00ced1', 'J': '#ba55d3', 'K': '#20b2aa', 'L': '#ff69b4',
+          'M': '#00bfff', 'N': '#dc143c', 'O': '#9932cc', 'P': '#ff6347',
+          'Q': '#3cb371', 'R': '#4682b4', 'S': '#4a6bff', 'T': '#00fa9a',
+          'U': '#dda0dd', 'V': '#1e90ff', 'W': '#b0c4de', 'X': '#ffdead',
+          'Y': '#7b68ee', 'Z': '#ff4500',
+
+          '0': '#66cdaa', '1': '#e9967a', '2': '#a0522d', '3': '#8fbc8f',
+          '4': '#f08080', '5': '#48d1cc', '6': '#db7093', '7': '#5f9ea0',
+          '8': '#ffdab9', '9': '#9acd32',
+
+          '@': '#d2691e', '#': '#b22222', '$': '#008b8b', '!': '#ee82ee',
+          '%': '#f0e68c', '&': '#00ff7f', '*': '#ff1493', '?': '#6495ed',
+          '+': '#a9a9a9', '=': '#00ffff', '_': '#ff7f50', '-': '#a52a2a'
+        };
+        const upperChar = char.charAt(0).toUpperCase();
+        return colors[upperChar] || '#888';  // Default gray
+      };
+
+      // 🧑 Receiver Info (Simulated)
+      const userData = {
+        name: receiver,
+        dp: receiver.charAt(0).toUpperCase(),
+        isOnline: true,
+        lastSeen: "today at 12:45 PM",
+        isTyping: false
+      };
+
+      // ✨ Set UI
+      receiverName.textContent = userData.name;
+      receiverDp.textContent = userData.dp;
+      receiverDp.style.backgroundColor = getAvatarColor(userData.dp);
+      onlineStatus.style.display = userData.isOnline ? 'inline-block' : 'none';
+      lastSeen.textContent = userData.isOnline ? 'online' : `last seen ${ userData.lastSeen }`;
+      typingIndicator.classList.toggle('active', userData.isTyping);
+
+      // 🔤 Typing
+      messageBox.addEventListener('input', () => {
+        socket.emit('typing', {
+          sender,
+          receiver,
+          isTyping: messageBox.value.trim().length > 0
+        });
+      });
+
+      socket.on('typing', (data) => {
+        if (data.sender === receiver && data.receiver === sender) {
+          typingIndicator.classList.toggle('active', data.isTyping);
+          if (!data.isTyping) {
+            onlineStatus.style.display = 'inline-block';
+            lastSeen.textContent = 'online';
+          }
+        }
+      });
+
+      // 📶 Join Room
+      socket.emit("joinRoom", { sender, receiver });
+
+      // 📜 Load Messages
+      function loadMessages() {
+        fetch(`/chat-messages?sender=${ sender }&receiver=${ receiver }`)
+          .then(res => res.json())
+          .then(data => {
+            messagesContainer.innerHTML = "";
+            data.messages.forEach(msg => {
+              addMessageToChat(msg);
+            });
+            scrollToBottom();
+          });
+      }
+
+      function addMessageToChat(msg) {
+        const msgDiv = document.createElement("div");
+        msgDiv.classList.add("message", msg.sender === sender ? "sent" : "received");
+        const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        msgDiv.innerHTML = `${ msg.message }<span class="message-time">${ time }</span>`;
+        messagesContainer.appendChild(msgDiv);
+      }
+
+      function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      // 📁 Initialize chat
+      fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sender, receiver })
+      }).then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            messageBox.disabled = false;
+            sendButton.disabled = false;
+            loadMessages();
+          }
+        });
+
+      // ✉️ Send
+      sendButton.addEventListener("click", sendMessage);
+      function sendMessage() {
+        const message = messageBox.value.trim();
+        if (!message) return;
+
+        const msgObj = { sender, receiver, message, timestamp: new Date().toISOString() };
+        socket.emit("sendMessage", msgObj);
+        socket.emit('typing', { sender, receiver, isTyping: false });
+        messageBox.value = "";
+      }
+
+      // 🔁 Receive
+      socket.on("receiveMessage", (msgObj) => {
+        const involved = (msgObj.sender === sender && msgObj.receiver === receiver) ||
+          (msgObj.sender === receiver && msgObj.receiver === sender);
+        if (involved) {
+          addMessageToChat(msgObj);
+          scrollToBottom();
+        }
+      });
+
+      messageBox.addEventListener("keypress", e => {
+        if (e.key === "Enter") sendMessage();
+      });
+
+      // 💤 Simulate receiver offline
+      setTimeout(() => {
+        socket.emit('userStatus', {
+          user: receiver,
+          isOnline: false,
+          lastSeen: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+      }, 30000);
+    </script>
+  </body>
+
+</html>

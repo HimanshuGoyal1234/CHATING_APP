@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+
+    <body>
+
+    </body>
+    <script>
+        // Call from frontend JS (on button click or form submit)
+        function asdad() {
+            fetch("/rename-folder", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    oldName: "Himanshu",
+                    newName: "ShadowKing"
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("✅ Folder renamed!");
+                    } else {
+                        alert("❌ Failed: " + data.error);
+                    }
+                })
+                .catch(err => {
+                    console.error("❌ Error:", err);
+                });
+}
+    </script>
+
+</html>
