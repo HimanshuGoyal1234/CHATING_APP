@@ -23,7 +23,10 @@ app.use('/LOGIN', express.static(path.join(__dirname, 'LOGIN')));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
+const rename = require("./JS/rename"); 
+app.post("/rename", rename);
+const password_change = require("./JS/password_change"); 
+app.post("/password-change", password_change);
 app.get('/unread', (req, res) => {
     const username = req.query.username;
     if (!username) return res.status(400).send("username required");

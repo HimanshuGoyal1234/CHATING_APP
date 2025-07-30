@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Change Username</title>
+        <style>
+            :root {
+                --primary-color: #5e00c9;
+                --primary-hover: #7700ff;
+                --secondary-color: #3700b3;
+                --background-dark: #121212;
+                --background-darker: #1e1e1e;
+                --background-light: #2d2d2d;
+                --text-secondary: #e1e1e1;
+                --text-typing: #bb86fc;
+                --online-status: #03dac6;
+                --border-radius: 8px;
+                --spacing-sm: 8px;
+                --spacing-md: 12px;
+                --spacing-lg: 16px;
+                --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+                --primary: #7700ff;
+                --primary-light: rgba(119, 0, 255, 0.1);
+                --primary-dark: #5e00c9;
+                --surface: #1e1e1e;
+                --surface-light: #2a2a2a;
+                --text-primary: #ffffff;
+                --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                --error-color: #cf6679;
+            }
+
+            body {
+                font-family: Arial, sans-serif;
+                background: var(--background-dark);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            .form-container {
+                background-color: var(--surface);
+                padding: var(--spacing-lg);
+                border-radius: var(--border-radius);
+                box-shadow: var(--shadow);
+                width: 100%;
+                max-width: 400px;
+                color: var(--text-primary);
+                position: relative;
+                overflow: hidden;
+            }
+
+            .form-container::before {
+                content: "";
+                position: absolute;
+                z-index: 1;
+                height: 200px;
+                width: 438px;
+                background: var(--background-dark);
+                transform: translate(-19px, -20px);
+                animation: read 2s alternate .2s 1 forwards;
+            }
+
+            @keyframes read {
+                0% {}
+
+                100% {
+                    width: 0px;
+                }
+            }
+
+            .form-container h2 {
+                margin-top: 0;
+                text-align: center;
+                color: var(--text-primary);
+            }
+
+            .input-group {
+                margin-bottom: var(--spacing-md);
+                text-align: left;
+                position: relative;
+            }
+
+            .input-group label {
+                display: block;
+                margin-bottom: var(--spacing-sm);
+                font-weight: bold;
+                color: var(--text-secondary);
+            }
+
+            .input-group input {
+                width: 100%;
+                padding: var(--spacing-sm);
+                border: 1px solid var(--surface-light);
+                border-radius: var(--border-radius);
+                box-sizing: border-box;
+                font-size: 16px;
+                background-color: var(--background-light);
+                color: var(--text-primary);
+            }
+
+            .input-group input:focus {
+                border-color: var(--primary);
+                outline: none;
+                box-shadow: 0 0 5px var(--primary-light);
+            }
+
+            .input-group input::placeholder {
+                color: var(--text-secondary);
+            }
+
+            .submit-btn {
+                width: 100%;
+                padding: var(--spacing-sm);
+                background-color: var(--primary);
+                color: var(--text-primary);
+                border: none;
+                border-radius: var(--border-radius);
+                font-size: 16px;
+                cursor: pointer;
+                transition: var(--transition);
+            }
+
+            .submit-btn:hover {
+                background-color: var(--primary-hover);
+            }
+
+            .submit-btn:disabled {
+                background-color: var(--surface-light);
+                cursor: not-allowed;
+            }
+
+            .error-message {
+                color: var(--error-color);
+                font-size: 14px;
+                margin-top: 4px;
+                display: none;
+            }
+
+            .success-message {
+                color: var(--online-status);
+                text-align: center;
+                margin-top: var(--spacing-md);
+                display: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="form-container">
+            <h2>Change Username</h2>
+            <form id="usernameForm">
+                <div class="input-group">
+                    <label for="username">New Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter new username" required>
+                    <div class="error-message" id="usernameError"></div>
+                </div>
+                <button type="submit" class="submit-btn" id="submitBtn">Update Username</button>
+                <div class="success-message" id="successMessage">Username updated successfully!</div>
+            </form>
+        </div>
+        <script>
+            const username = document.getElementById("username");
+            const submitBtn = document.getElementById("submitBtn");
+            const errorDiv = document.getElementById("usernameError");
+            const successDiv = document.getElementById("successMessage");
+            const currentUser = localStorage.getItem("loggedInUser");
+
+            const form = document.getElementById("usernameForm");
+
+            form.addEventListener("submit", function (e) {
+                e.preventDefault(); // prevent page reload
+
+                const newUsername = username.value.trim();
+                if (!newUsername) {
+                    errorDiv.textContent = "Username cannot be empty.";
+                    errorDiv.style.display = "block";
+                    return;
+                }
+
+                errorDiv.style.display = "none";
+
+                fetch("/rename", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ old: currentUser, new: newUsername })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            successDiv.textContent = "✅ Username updated successfully!";
+                            successDiv.style.display = "block";
+                            localStorage.setItem("loggedInUser", newUsername);
+                            setTimeout(() => {
+                                window.location.href = "index.html"
+                            }, 1000);
+                            // Optionally update localStorage
+                        } else {
+                            errorDiv.textContent = data.message || "Something went wrong.";
+                            errorDiv.style.display = "block";
+                        }
+                    })
+                    .catch(err => {
+                        errorDiv.textContent = "Server error. Try again.";
+                        errorDiv.style.display = "block";
+                        console.error("❌ Error:", err);
+                    });
+            });
+        </script>
+
+    </body>
+
+</html>
