@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Deletion</title>
+  <style>
+    /* ===== Base Variables ===== */
+    :root {
+      /* Color Palette */
+      --primary-400: #5e00c9;
+      --primary-500: #7700ff;
+      --primary-600: #3700b3;
+      --error-400: #cf6679;
+      --success-400: #03dac6;
+      --gray-900: #121212;
+      --gray-800: #1e1e1e;
+      --gray-700: #2a2a2a;
+      --gray-600: #2d2d2d;
+      --gray-100: #e1e1e1;
+      --accent-400: #bb86fc;
+      
+      /* Spacing */
+      --space-xs: 0.5rem;
+      --space-sm: 0.75rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      
+      /* Typography */
+      --text-sm: 0.875rem;
+      --text-base: 1rem;
+      --text-lg: 1.125rem;
+      --text-xl: 1.25rem;
+      
+      /* Effects */
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 0 10px rgba(0, 0, 0, 0.5);
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --transition: all 0.2s ease;
+    }
+
+    /* ===== Base Styles ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background-color: var(--gray-900);
+      color: var(--gray-100);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: var(--space-lg);
+    }
+
+    /* ===== Components ===== */
+    .card {
+      background-color: var(--gray-800);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      width: 100%;
+      max-width: 28rem;
+      padding: var(--space-lg);
+    }
+
+    .card__header {
+      text-align: center;
+      margin-bottom: var(--space-md);
+    }
+
+    .card__title {
+      color: var(--accent-400);
+      font-size: var(--text-xl);
+      font-weight: 600;
+      margin-bottom: var(--space-xs);
+    }
+
+    .card__subtitle {
+      color: var(--primary-500);
+      font-size: var(--text-lg);
+      text-shadow: 0 0 10px rgba(135, 0, 255, 0.5);
+    }
+
+    .card__body {
+      margin-bottom: var(--space-md);
+    }
+
+    .card__footer {
+      margin-top: var(--space-md);
+    }
+
+    .form-group {
+      margin-bottom: var(--space-md);
+      position: relative;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: var(--space-xs);
+      color: var(--gray-100);
+      font-size: var(--text-sm);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: var(--space-sm);
+      background-color: var(--gray-700);
+      border: 1px solid var(--gray-600);
+      border-radius: var(--radius-sm);
+      color: var(--gray-100);
+      font-size: var(--text-base);
+      transition: var(--transition);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary-500);
+      box-shadow: 0 0 0 2px rgba(119, 0, 255, 0.2);
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: var(--space-sm);
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--gray-100);
+      cursor: pointer;
+      padding: var(--space-xs);
+      opacity: 0.7;
+      transition: var(--transition);
+    }
+
+    .password-toggle:hover {
+      opacity: 1;
+    }
+
+    .btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      padding: var(--space-sm);
+      background-color: var(--primary-500);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-base);
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn:hover {
+      background-color: var(--primary-400);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .alert {
+      padding: var(--space-sm);
+      border-radius: var(--radius-sm);
+      font-size: var(--text-sm);
+      margin-top: var(--space-sm);
+    }
+
+    .alert--error {
+      color: var(--error-400);
+      background-color: rgba(207, 102, 121, 0.1);
+    }
+
+    .alert--success {
+      color: var(--success-400);
+      background-color: rgba(3, 218, 198, 0.1);
+    }
+
+    .alert--info {
+      color: var(--gray-100);
+      background-color: rgba(229, 229, 229, 0.1);
+    }
+
+    /* ===== Utilities ===== */
+    .text-center {
+      text-align: center;
+    }
+
+    .mt-2 {
+      margin-top: var(--space-sm);
+    }
+
+    .mb-2 {
+      margin-bottom: var(--space-sm);
+    }
+
+    .w-full {
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="card__header">
+      <h1 class="card__title">Delete Your Account</h1>
+      <h2 id="_username_" class="card__subtitle"></h2>
+    </div>
+    
+    <div class="card__body">
+      <p class="mb-2">This action cannot be undone. Please enter your password to confirm account deletion.</p>
+      
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <div style="position: relative;">
+          <input id="password" type="password" class="form-control" placeholder="Enter your password">
+          <button class="password-toggle" aria-label="Toggle password visibility">Show</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card__footer">
+      <button id="send" class="btn">Delete Account</button>
+      <div id="assad" class="alert mt-2"></div>
+    </div>
+  </div>
+
+  <script>
+    const sendBtn = document.getElementById("send");
+    const assad = document.getElementById("assad");
+    const passwordInput = document.getElementById("password");
+    const togglePassword = document.querySelector('.password-toggle');
+    const username = localStorage.getItem("loggedInUser") || '';
+    const _username_ = document.getElementById("_username_");
+    
+    _username_.innerText = username || 'Unknown user';
+
+    // Toggle password visibility
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      togglePassword.textContent = type === 'password' ? 'show' : 'hide';
+    });
+
+    // Handle Enter key press
+    passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        sendBtn.click();
+      }
+    });
+
+    sendBtn.addEventListener("click", async () => {
+      const pwd = passwordInput.value.trim();
+      
+      // Reset alert state
+      assad.className = 'alert mt-2';
+      assad.textContent = '';
+
+      if (!pwd) {
+        assad.textContent = "Please enter your password";
+        assad.classList.add('alert--error');
+        return;
+      }
+      
+      if (!username) {
+        assad.textContent = "No logged in user found";
+        assad.classList.add('alert--error');
+        return;
+      }
+
+      assad.textContent = "Processing your request...";
+      assad.classList.add('alert--info');
+
+      try {
+        const res = await fetch("/delete-account", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: username, password: pwd }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          let errorMessage = "Something went wrong";
+          if (res.status === 401) errorMessage = "Incorrect password";
+          if (res.status === 404) errorMessage = "User not found";
+          
+          assad.textContent = data.error || errorMessage;
+          assad.className = 'alert alert--error mt-2';
+        } else {
+          assad.textContent = data.message || "Account successfully deleted";
+          assad.className = 'alert alert--success mt-2';
+          localStorage.removeItem("loggedInUser")
+          setTimeout(() => { window.location.href = '/login.html'; }, 500);
+        }
+      } catch (err) {
+        console.error("Fetch failed:", err);
+        assad.textContent = "Network error. Please try again.";
+        assad.className = 'alert alert--error mt-2';
+      }
+    });
+  </script>
+</body>
+
+</html>

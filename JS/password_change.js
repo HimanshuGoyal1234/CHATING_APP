@@ -2,31 +2,59 @@ const fs = require("fs");
 const path = require("path");
 
 module.exports = function changePassword(req, res) {
-  const { username, password } = req.body;
+  const { username, old_password, new_password } = req.body;
+
+  if (!username || !old_password || !new_password) {
+    return res.status(400).json({
+      success: false,
+      message: "Username, old password and new password are required"
+    });
+  }
+
+  if (old_password === new_password) {
+    return res.status(400).json({
+      success: false,
+      message: "New password must be different from old password"
+    });
+  }
 
   const filePath = path.join(__dirname, "../LOGIN/id_pass.json");
 
   try {
-    // Step 1: Read file and parse JSON
     const rawData = fs.readFileSync(filePath, "utf-8");
     const users = JSON.parse(rawData);
 
-    // Step 2: Find and update the matching user
     const userIndex = users.findIndex(user => user.username === username);
-
     if (userIndex === -1) {
-      return res.json({ success: false, message: "User not found" });
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
     }
 
-    users[userIndex].password = password;
+    const user = users[userIndex];
 
-    // Step 3: Save updated data
+    if (user.password !== old_password) {
+      return res.status(401).json({
+        success: false,
+        message: "Old password is incorrect"
+      });
+    }
+
+    // Update to new password
+    users[userIndex].password = new_password;
+
     fs.writeFileSync(filePath, JSON.stringify(users, null, 2), "utf-8");
 
-    res.json({ success: true, message: "Password updated" });
-
+    return res.json({
+      success: true,
+      message: "Password updated successfully"
+    });
   } catch (err) {
     console.error("❌ Error:", err);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
   }
 };

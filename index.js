@@ -3,7 +3,7 @@ const path = require('path');
 const http = require('http');
 const socketIO = require('socket.io');
 const fs = require('fs');
-
+const cors = require("cors");
 const loginHandler = require('./JS/login');
 const createAccountHandler = require('./JS/create_account');
 const startChatHandler = require('./JS/chat/chat-initiate');
@@ -14,18 +14,52 @@ const io = socketIO(server);
 const activeStatus = require('./JS/active_user'); // ya './JS/activeStatus'
 const deleteChatList = require('./JS/chat/delete_chat_list');
 const checkBlock = require('./JS/chat/block');
-app.get('/is-blocked', checkBlock);
 const re_Block = require('./JS/chat/remove_block');
+
+app.get('/is-blocked', checkBlock);
 app.get('/re-blocked', re_Block);
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/LOGIN', express.static(path.join(__dirname, 'LOGIN')));
-
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-const rename = require("./JS/rename"); 
+
+// DELETE ACCOUNT
+app.post('/delete-account', (req, res) => {
+    const { username, password } = req.body;
+    const filePath = path.join(__dirname, "LOGIN", "id_pass.json");
+
+    try {
+        const data = fs.readFileSync(filePath, "utf-8");
+        const users = JSON.parse(data);
+        const userIndex = users.findIndex(u => u.username === username);
+        if (userIndex === -1) return res.status(404).json({ error: "User not found" });
+
+        const userObj = users[userIndex];
+        if (userObj.password === password) {
+            console.log("✅ Credentials match. Username:", username);
+
+            // Remove user from array
+            users.splice(userIndex, 1);
+
+            // Write updated list back (optionally you can backup before overwriting)
+            fs.writeFileSync(filePath, JSON.stringify(users, null, 2), 'utf8');
+
+            return res.json({ message: "Account is deleted" });
+        } else {
+            console.warn("❌ Password mismatch for", username);
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
+    } catch (err) {
+        console.error("Error reading/parsing:", err.message);
+        return res.status(500).json({ error: "Internal error" });
+    }
+});
+
+const rename = require("./JS/rename");
 app.post("/rename", rename);
-const password_change = require("./JS/password_change"); 
+const password_change = require("./JS/password_change");
 app.post("/password-change", password_change);
 app.get('/unread', (req, res) => {
     const username = req.query.username;
@@ -40,7 +74,6 @@ app.get('/unread', (req, res) => {
     const rawData = fs.readFileSync(filePath, "utf-8");
     res.send(rawData);
 });
-
 app.post("/add_unread", (req, res) => {
     const { username, receiver } = req.body;
 
@@ -85,7 +118,6 @@ app.post("/add_unread", (req, res) => {
 
     res.json({ success: true, unread: existing });
 });
-
 app.post("/clear_chat", (req, res) => {
     const { user, receiver } = req.body;
     // 1️⃣ Clear the chat file
@@ -123,14 +155,12 @@ app.post("/clear_chat", (req, res) => {
         });
     });
 });
-
 // ✅ Routes
 app.post('/login', loginHandler);
 app.post('/create-account', createAccountHandler);
 app.post('/chat', startChatHandler);
 app.get('/chat-messages', chatMessages);
 app.post("/delete_chat_list", deleteChatList);
-
 // ✅ Search user API
 app.post('/search', (req, res) => {
     const query = req.body.search_query?.trim().toLowerCase();
@@ -145,8 +175,6 @@ app.post('/search', (req, res) => {
         res.json({ results });
     });
 });
-
-
 // ✅ Active users API
 app.get('/active-users', (req, res) => {
     const active = activeStatus.getActiveUsers();
@@ -352,7 +380,10 @@ io.on("connection", (socket) => {
         }
     });
 });
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
+// const PORT = process.env.PORT || 3000;
+// server.listen(PORT, () => {
+//     console.log(`🚀 Server is running on port ${ PORT }`);
+// });
+server.listen(3000, () => {
+    console.log(`🚀 Server is running on 3000 ${ 3000 }`);
 });
